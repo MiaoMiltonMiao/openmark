@@ -1,0 +1,69 @@
+name: CI — links & build
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  link-check:
+    name: Link Check (Lychee)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run lychee
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: --verbose --no-progress --exclude-mail --accept 200,429,999 .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-site:
+    name: Build Site (conditional)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Docusaurus
+      - name: Use Node.js
+        if: ${{ hashFiles('docusaurus.config.js') != '' || hashFiles('docusaurus.config.cjs') != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps (Docusaurus)
+        if: ${{ hashFiles('docusaurus.config.js') != '' || hashFiles('docusaurus.config.cjs') != '' }}
+        run: |
+          if [ -f yarn.lock ]; then yarn install --frozen-lockfile;
+          elif [ -f package-lock.json ]; then npm ci;
+          else npm install; fi
+      - name: Build (Docusaurus)
+        if: ${{ hashFiles('docusaurus.config.js') != '' || hashFiles('docusaurus.config.cjs') != '' }}
+        run: |
+          npm run build || yarn build
+
+      # Hugo
+      - name: Setup Hugo
+        if: ${{ hashFiles('hugo.toml') != '' || hashFiles('config.toml') != '' }}
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.133.1'
+          extended: true
+      - name: Build (Hugo)
+        if: ${{ hashFiles('hugo.toml') != '' || hashFiles('config.toml') != '' }}
+        run: hugo --minify
+
+      # MkDocs
+      - name: Setup Python
+        if: ${{ hashFiles('mkdocs.yml') != '' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps (MkDocs)
+        if: ${{ hashFiles('mkdocs.yml') != '' }}
+        run: |
+          pip install --upgrade pip
+          pip install mkdocs mkdocs-material
+      - name: Build (MkDocs)
+        if: ${{ hashFiles('mkdocs.yml') != '' }}
+        run: mkdocs build --strict
+
