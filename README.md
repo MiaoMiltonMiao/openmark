@@ -1,1 +1,1 @@
-# openmark-demo
+# OpenMark Demo
