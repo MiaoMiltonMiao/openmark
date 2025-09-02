@@ -41,14 +41,12 @@ jobs:
         run: |
           mkdir -p docs
           if [ ! -f docs/intro.md ]; then
-            printf '%s\n' \
-'---' \
-'id: intro' \
-'title: Welcome to OpenMark' \
-'sidebar_position: 1' \
-'---' \
-'OpenMark turns long AI chats into reusable Markdown.' \
-> docs/intro.md
+            echo '---' > docs/intro.md
+            echo 'id: intro' >> docs/intro.md
+            echo 'title: Welcome to OpenMark' >> docs/intro.md
+            echo 'sidebar_position: 1' >> docs/intro.md
+            echo '---' >> docs/intro.md
+            echo 'OpenMark turns long AI chats into reusable Markdown.' >> docs/intro.md
           fi
 
       # Build will run "prebuild" first (generates sidebars.generated.js)
