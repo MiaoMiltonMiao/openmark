@@ -22,11 +22,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Show Node & npm versions (debug)
-        run: |
-          node -v || true
-          npm -v || true
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -41,19 +36,19 @@ jobs:
             npm install
           fi
 
-      # Safety net: ensure there's at least one doc so Docusaurus doesn't error
+      # Ensure docs/intro.md exists so build doesn't fail
       - name: Ensure docs/intro.md exists
         run: |
           mkdir -p docs
           if [ ! -f docs/intro.md ]; then
-            cat > docs/intro.md <<'EOF'
-            ---
-            id: intro
-            title: Welcome to OpenMark
-            sidebar_position: 1
-            ---
-            OpenMark turns long AI chats into reusable Markdown.
-            EOF
+            printf '%s\n' \
+'---' \
+'id: intro' \
+'title: Welcome to OpenMark' \
+'sidebar_position: 1' \
+'---' \
+'OpenMark turns long AI chats into reusable Markdown.' \
+> docs/intro.md
           fi
 
       # Build will run "prebuild" first (generates sidebars.generated.js)
