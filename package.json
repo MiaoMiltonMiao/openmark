@@ -1,20 +1,24 @@
 {
   "name": "openmark-site",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "start": "docusaurus start",
     "build": "docusaurus build",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear",
-    "deploy": "docusaurus deploy"
+    "deploy": "docusaurus deploy",
+    "prebuild": "node scripts/generateSidebar.mjs"
   },
   "dependencies": {
     "@docusaurus/core": "latest",
     "@docusaurus/preset-classic": "latest",
     "clsx": "latest",
-    "prism-react-renderer": "^2.4.1",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "prism-react-renderer": "latest",
+    "@octokit/rest": "latest",
+    "busboy": "latest",
+    "gray-matter": "latest"
   }
 }

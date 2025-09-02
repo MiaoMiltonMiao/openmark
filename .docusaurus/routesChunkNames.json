@@ -1,0 +1,87 @@
+{
+  "/openmark/__docusaurus/debug-5a3": {
+    "__comp": "__comp---theme-debug-config-23-a-2ff",
+    "__context": {
+      "plugin": "plugin---openmark-docusaurus-debugb-38-c45"
+    }
+  },
+  "/openmark/__docusaurus/debug/config-752": {
+    "__comp": "__comp---theme-debug-config-23-a-2ff",
+    "__context": {
+      "plugin": "plugin---openmark-docusaurus-debugb-38-c45"
+    }
+  },
+  "/openmark/__docusaurus/debug/content-2ff": {
+    "__comp": "__comp---theme-debug-contentba-8-ce7",
+    "__context": {
+      "plugin": "plugin---openmark-docusaurus-debugb-38-c45"
+    },
+    "__props": "__props---openmark-docusaurus-debug-contentf-17-893"
+  },
+  "/openmark/__docusaurus/debug/globalData-c71": {
+    "__comp": "__comp---theme-debug-global-dataede-0fa",
+    "__context": {
+      "plugin": "plugin---openmark-docusaurus-debugb-38-c45"
+    }
+  },
+  "/openmark/__docusaurus/debug/metadata-1c1": {
+    "__comp": "__comp---theme-debug-site-metadata-68-e-3d4",
+    "__context": {
+      "plugin": "plugin---openmark-docusaurus-debugb-38-c45"
+    }
+  },
+  "/openmark/__docusaurus/debug/registry-2dc": {
+    "__comp": "__comp---theme-debug-registry-679-501",
+    "__context": {
+      "plugin": "plugin---openmark-docusaurus-debugb-38-c45"
+    }
+  },
+  "/openmark/__docusaurus/debug/routes-7eb": {
+    "__comp": "__comp---theme-debug-routes-946-699",
+    "__context": {
+      "plugin": "plugin---openmark-docusaurus-debugb-38-c45"
+    }
+  },
+  "/openmark/upload-813": {
+    "__comp": "__comp---site-src-pages-upload-jsx-557-d5e",
+    "__context": {
+      "plugin": "plugin---openmark-uploada-74-856"
+    },
+    "config": "config---openmark-upload-5-e-9-7fe"
+  },
+  "/openmark/upload-d18": {
+    "__comp": "__comp---site-src-pages-upload-tsx-3-c-2-67f",
+    "__context": {
+      "plugin": "plugin---openmark-uploada-74-856"
+    },
+    "config": "config---openmark-upload-5-e-9-7fe"
+  },
+  "/openmark/docs-7d9": {
+    "__comp": "__comp---theme-docs-root-5-e-9-0b6",
+    "__context": {
+      "plugin": "plugin---openmark-docsaba-25a"
+    }
+  },
+  "/openmark/docs-6b2": {
+    "__comp": "__comp---theme-doc-version-roota-7-b-5de",
+    "__props": "__props---openmark-docs-16-c-229"
+  },
+  "/openmark/docs-ef4": {
+    "__comp": "__comp---theme-doc-roota-94-67a"
+  },
+  "/openmark/docs/intro-8f6": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---openmark-docs-intro-0-e-3-764"
+  },
+  "/openmark/docs/Wallet_Pay_Vibe_Prompt_Playbook-d5f": {
+    "__comp": "__comp---theme-doc-item-178-a40",
+    "content": "content---openmark-docs-wallet-pay-vibe-prompt-playbook-7-df-296"
+  },
+  "/openmark/-eac": {
+    "__comp": "__comp---theme-mdx-page-1-f-3-b90",
+    "__context": {
+      "plugin": "plugin---openmark-uploada-74-856"
+    },
+    "content": "content---openmark-f-39-92a"
+  }
+}

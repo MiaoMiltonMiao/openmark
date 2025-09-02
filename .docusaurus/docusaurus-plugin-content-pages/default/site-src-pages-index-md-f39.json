@@ -1,0 +1,12 @@
+{
+  "type": "mdx",
+  "permalink": "/openmark/",
+  "source": "@site/src/pages/index.md",
+  "title": "OpenMark",
+  "description": "Chat → Markdown → Open Knowledge",
+  "frontMatter": {
+    "title": "OpenMark",
+    "description": "Chat → Markdown → Open Knowledge"
+  },
+  "unlisted": false
+}
