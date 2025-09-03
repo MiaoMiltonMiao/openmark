@@ -1,11 +1,8 @@
 // @ts-check
-// Docusaurus config for OpenMark
-// - Uses env var BASE_URL to switch between GitHub Pages and Vercel.
-//   * GitHub Pages build (Actions): BASE_URL not set -> '/openmark/'
-//   * Vercel build: BASE_URL='/' (set by `npm run build:vercel`)
-// - You can also override SITE_URL if needed.
+// Docusaurus config WITHOUT explicit Prism theme overrides.
+// This avoids requiring 'prism-react-renderer' in your app deps.
+// Docusaurus will use its defaults internally.
 
-const isProd = process.env.NODE_ENV === 'production';
 const siteUrl = process.env.SITE_URL || 'https://miaomiltonmiao.github.io';
 const baseUrl = process.env.BASE_URL || '/openmark/';
 
@@ -18,11 +15,9 @@ const config = {
   trailingSlash: false,
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: undefined, // set to 'img/favicon.ico' if you add one under /static/img
 
-  // GitHub pages deployment config.
-  organizationName: 'MiaoMiltonMiao', // Usually your GitHub org/user name.
-  projectName: 'openmark', // Usually your repo name.
+  organizationName: 'MiaoMiltonMiao',
+  projectName: 'openmark',
 
   i18n: {
     defaultLocale: 'en',
@@ -36,8 +31,6 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          // If you want "Edit this page" links, set your repo URL here:
-          // editUrl: 'https://github.com/MiaoMiltonMiao/openmark/edit/main/',
         },
         blog: false,
         theme: {
@@ -52,7 +45,6 @@ const config = {
     ({
       navbar: {
         title: 'OpenMark',
-        // logo: { alt: 'OpenMark', src: 'img/logo.svg' },
         items: [
           { type: 'docSidebar', sidebarId: 'tutorialSidebar', position: 'left', label: 'Docs' },
           { href: 'https://github.com/MiaoMiltonMiao/openmark', label: 'GitHub', position: 'right' },
@@ -61,23 +53,12 @@ const config = {
       footer: {
         style: 'dark',
         links: [
-          {
-            title: 'Docs',
-            items: [{label: 'Intro', to: '/docs/intro'}],
-          },
-          {
-            title: 'Community',
-            items: [
-              {label: 'GitHub', href: 'https://github.com/MiaoMiltonMiao/openmark'},
-            ],
-          },
+          { title: 'Docs', items: [{ label: 'Intro', to: '/docs/intro' }] },
+          { title: 'Community', items: [{ label: 'GitHub', href: 'https://github.com/MiaoMiltonMiao/openmark' }] },
         ],
         copyright: `© ${new Date().getFullYear()} OpenMark.`,
       },
-      prism: {
-        theme: require('prism-react-renderer/themes/github'),
-        darkTheme: require('prism-react-renderer/themes/dracula'),
-      },
+      // No 'prism' field here; use defaults to avoid extra dep.
     }),
 };
 
