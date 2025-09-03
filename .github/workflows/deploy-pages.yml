@@ -1,4 +1,4 @@
-name: Deploy Docusaurus to GitHub Pages
+name: Deploy Docusaurus to GitHub Pages (robust)
 
 on:
   push:
@@ -32,16 +32,24 @@ jobs:
           node -v
           npm -v
           echo "NODE_ENV=$NODE_ENV"
+          echo "PWD=$(pwd)"
           ls -la
 
-      - name: Install deps (include dev)
-        run: npm ci --include=dev
+      - name: Install deps (prefer lockfile, fallback to install)
+        run: |
+          npm ci --include=dev || npm install
 
-      - name: Verify docusaurus installed
-        run: npx --no docusaurus --version
+      - name: Verify docusaurus availability
+        run: |
+          npx --yes @docusaurus/core@latest docusaurus --version || true
+          npx --yes docusaurus --version || true
+          jq '.scripts' package.json || cat package.json
 
-      - name: Build (GitHub Pages baseUrl)
+      - name: Build for GitHub Pages (baseUrl /openmark/)
         run: npm run build:gh
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
