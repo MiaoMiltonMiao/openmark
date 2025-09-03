@@ -1,24 +1,13 @@
 {
-  "name": "openmark-site",
-  "private": true,
-  "version": "0.0.2",
   "scripts": {
     "start": "docusaurus start",
     "build": "docusaurus build",
     "serve": "docusaurus serve",
-    "clear": "docusaurus clear",
-    "deploy": "docusaurus deploy",
-    "prebuild": "node scripts/generateSidebar.mjs"
+
+    "build:gh": "docusaurus build",                 // 給 GitHub Pages：BASE_URL 走預設 /openmark/
+    "build:vercel": "cross-env BASE_URL=/ docusaurus build"  // 給 Vercel：把 BASE_URL 設成 /
   },
-  "dependencies": {
-    "@docusaurus/core": "latest",
-    "@docusaurus/preset-classic": "latest",
-    "clsx": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "prism-react-renderer": "latest",
-    "@octokit/rest": "latest",
-    "busboy": "latest",
-    "gray-matter": "latest"
+  "devDependencies": {
+    "cross-env": "^7.0.3"
   }
 }
