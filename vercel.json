@@ -1,13 +1,19 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "builds": [
-    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } }
-  ],
   "installCommand": "npm ci --include=dev",
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "build",
+  "routes": [
+    {
+      "src": "/($|.*)",
+      "dest": "/"
+    }
+  ],
   "git": {
-    "deploymentEnabled": { "main": true, "*": false }
+    "deploymentEnabled": {
+      "main": true,
+      "*": false
+    }
   }
 }
