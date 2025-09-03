@@ -4,7 +4,8 @@
   "builds": [
     { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } }
   ],
-  "buildCommand": "npm ci && npm run build:vercel",
+  "installCommand": "npm ci --include=dev",
+  "buildCommand": "npm run build:vercel",
   "outputDirectory": "build",
   "git": {
     "deploymentEnabled": { "main": true, "*": false }
