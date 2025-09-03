@@ -1,22 +1,14 @@
----
-title: "<Post Title>"
-date: "2025-09-01"
-tags: ["topic", "series"]
-license: "CC BY 4.0"
-summary: "50–80 words English summary; optional short translation."
----
+# Mega Prompt
+> You are a professional developer. Create two files: ...
 
-# Context
-Where did this conversation originate? What problem is being solved?
+# Iteration 1
+- 問題 (Issue)：程式報錯，找不到模組
+- 解決 (Solution)：調整 import 路徑
 
-# Key Takeaways
-- Point 1
-- Point 2
-- Point 3
+# Iteration 2
+- 新需求 (New requirement)：加入 CLI 介面
+- 解決 (Solution)：增加 `argparse`
 
-# Details
-(Sections, lists, add images from `/static/...` as needed)
-
-# References
-- Chat transcript link (optional)
-- External link 1
+# Final Result
+```python
+print("Hello OpenMark!")
