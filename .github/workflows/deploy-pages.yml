@@ -27,8 +27,18 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install deps
-        run: npm ci
+      - name: Debug env
+        run: |
+          node -v
+          npm -v
+          echo "NODE_ENV=$NODE_ENV"
+          ls -la
+
+      - name: Install deps (include dev)
+        run: npm ci --include=dev
+
+      - name: Verify docusaurus installed
+        run: npx --no docusaurus --version
 
       - name: Build (GitHub Pages baseUrl)
         run: npm run build:gh
