@@ -8,8 +8,9 @@ let errors = 0;
 const rules = [
   {
     name: 'no-absolute-root-links',
-    test: /\]\(\/(?!\)|\s)/g, // ](/something
-    message: 'Avoid absolute site-root links. Use relative ./ or ../ links.',
+    // allow /docs/ absolute links; block other absolute site-root links
+    test: /\]\(\/(?!docs\/|\)|\s)/g,
+    message: 'Avoid absolute site-root links (except /docs/...). Use relative ./ or ../ links.',
   },
   {
     name: 'no-md-extension-in-doc-links',
