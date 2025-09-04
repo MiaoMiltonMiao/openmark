@@ -1,5 +1,4 @@
-// Vercel Serverless Function: /api/upload
-// Creates a new branch, commits the uploaded Markdown to docs/playbooks/, and opens a PR.
+// Vercel Serverless Function: /api/upload (v3 with GET healthcheck + strict normalization)
 const { Octokit } = require('@octokit/rest');
 const { customAlphabet } = require('nanoid');
 
@@ -9,9 +8,44 @@ function bad(res, code, msg, extra = {}) {
   res.status(code).json({ error: msg, ...extra });
 }
 
+function ok(res, data) {
+  res.status(200).json({ ok: true, ...data });
+}
+
+function assertPattern(name, value, re, res) {
+  if (!re.test(value)) {
+    bad(res, 400, `Invalid ${name}: "${value}" does not match ${re}`);
+    return false;
+  }
+  return true;
+}
+
 module.exports = async (req, res) => {
+  // Lightweight GET -> healthcheck / version & normalized envs (no secrets)
+  if (req.method === 'GET') {
+    const {
+      GITHUB_OWNER = '',
+      GITHUB_REPO = '',
+      BASE_BRANCH = 'main',
+      PLAYBOOK_DIR = 'docs/playbooks',
+    } = process.env;
+
+    const baseBranchName = String(BASE_BRANCH).trim().replace(/^refs\/heads\//, '');
+    const playbookDir = String(PLAYBOOK_DIR).replace(/^\/+|\/+$/g, '');
+
+    return ok(res, {
+      version: 'v3',
+      normalized: {
+        ownerLooksValid: /^[A-Za-z0-9-]+$/.test(GITHUB_OWNER || ''),
+        repoLooksValid: /^[A-Za-z0-9_.-]+$/.test(GITHUB_REPO || ''),
+        baseBranchName,
+        playbookDir,
+      },
+    });
+  }
+
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
+    res.setHeader('Allow', 'GET, POST');
     return bad(res, 405, 'Method Not Allowed');
   }
 
@@ -19,7 +53,7 @@ module.exports = async (req, res) => {
     // Body may already be parsed (application/json) or come as string
     let body = req.body;
     if (typeof body === 'string') {
-      try { body = JSON.parse(body); } catch { /* keep as string */ }
+      try { body = JSON.parse(body); } catch {}
     }
 
     const { filename, content, title, author, note } = body || {};
@@ -28,55 +62,55 @@ module.exports = async (req, res) => {
     if (typeof content !== 'string' || content.length === 0) return bad(res, 400, 'content must be non-empty string');
     if (content.length > 1_000_000) return bad(res, 400, 'File too large (max 1MB)');
 
-    const {
-      GITHUB_TOKEN,
-      GITHUB_OWNER,
-      GITHUB_REPO,
-      BASE_BRANCH = 'main',
-      PLAYBOOK_DIR = 'docs/playbooks',
-    } = process.env;
-
+    // ---- ENV VARS
+    let { GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, BASE_BRANCH = 'main', PLAYBOOK_DIR = 'docs/playbooks' } = process.env;
     if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO) {
       return bad(res, 500, 'Server not configured: missing GITHUB_* env vars');
     }
 
-    // Normalize and sanitize path parts
+    // Normalize envs
+    GITHUB_OWNER = String(GITHUB_OWNER).trim();     // allow uppercase; GitHub accepts it
+    GITHUB_REPO  = String(GITHUB_REPO).trim();
+    BASE_BRANCH  = String(BASE_BRANCH).trim();
+    const baseBranchName = BASE_BRANCH.replace(/^refs\/heads\//, '');
     const playbookDir = String(PLAYBOOK_DIR || 'docs/playbooks').replace(/^\/+|\/+$/g, '');
+
+    // Validate patterns (keep permissive but safe)
+    if (!assertPattern('GITHUB_OWNER', GITHUB_OWNER, /^[A-Za-z0-9-]+$/, res)) return;
+    if (!assertPattern('GITHUB_REPO', GITHUB_REPO, /^[A-Za-z0-9_.-]+$/, res)) return;
+    if (!assertPattern('BASE_BRANCH', baseBranchName, /^(?!.*\.\.)(?!.*\/\/)(?!.*@\{|~|\^|:|\*|\?|\[)[^\s]+$/, res)) return;
+
+    // ---- PATHS / BRANCH
     const stem = String(title || filename.replace(/\.(md|mdx)$/i, '')).toLowerCase()
       .replace(/[^a-z0-9\-]+/g, '-')
       .replace(/^-+|-+$/g, '') || 'playbook';
-    const safeStem = stem.replace(/\.\./g, ''); // no traversal
-    const outPath = `${playbookDir}/${safeStem}.md`; // always save as .md
+    const safeStem = stem.replace(/\.\./g, '');
+    const outPath = `${playbookDir}/${safeStem}.md`;   // relative path only
 
-    // PR branch
+    // Validate path: no leading slash, no '..'
+    if (!assertPattern('path', outPath, /^(?!\/)(?!.*\.\.)(?!.*\/\/)[A-Za-z0-9._\-\/]+\.md$/, res)) return;
+
+    // Branch name
     const branchName = `upload/${safeStem}-${nanoid()}`;
+    if (!assertPattern('branchName', branchName, /^(?!.*\.\.)(?!.*\/\/)(?!.*@\{|~|\^|:|\*|\?|\[)[A-Za-z0-9._\-\/]+$/, res)) return;
+    const ref = `refs/heads/${branchName}`;
 
     const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
-    // 1) Get base branch SHA
-    const { data: baseRef } = await octokit.git.getRef({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
-      ref: `heads/${BASE_BRANCH}`,
-    });
+    // 1) Base ref
+    const { data: baseRef } = await octokit.git.getRef({ owner: GITHUB_OWNER, repo: GITHUB_REPO, ref: `heads/${baseBranchName}` });
     const baseSha = baseRef.object.sha;
 
-    // 2) Create new branch
-    await octokit.git.createRef({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
-      ref: `refs/heads/${branchName}`, // must start with refs/heads/
-      sha: baseSha,
-    });
+    // 2) Create new ref
+    await octokit.git.createRef({ owner: GITHUB_OWNER, repo: GITHUB_REPO, ref, sha: baseSha });
 
-    // 3) Create file in new branch
+    // 3) Create file
     const message = `docs(playbook): add ${safeStem} via upload`;
     const contentB64 = Buffer.from(content, 'utf8').toString('base64');
-
     await octokit.repos.createOrUpdateFileContents({
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
-      path: outPath,           // MUST be a relative path (no leading slash)
+      path: outPath,
       message,
       content: contentB64,
       branch: branchName,
@@ -95,15 +129,14 @@ module.exports = async (req, res) => {
       owner: GITHUB_OWNER,
       repo: GITHUB_REPO,
       head: branchName,
-      base: BASE_BRANCH,
+      base: baseBranchName,
       title: prTitle,
       body: prBody,
       maintainer_can_modify: true,
     });
 
-    return res.status(200).json({ ok: true, prUrl: pr.html_url });
+    return ok(res, { prUrl: pr.html_url });
   } catch (err) {
-    // Surface Octokit errors more clearly
     const msg = err?.response?.data?.message || err?.message || 'Unexpected error';
     const doc = err?.response?.data?.documentation_url;
     console.error('Upload error:', msg, doc || '');
