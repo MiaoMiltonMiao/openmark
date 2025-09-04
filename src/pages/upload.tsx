@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
+import Layout from '@theme/Layout';
+import Link from '@docusaurus/Link';
 
-/**
- * /upload — Upload Markdown → opens a GitHub PR via /api/upload
- * NOTE: Make sure there is NOT a docs/upload.mdx at the same time (route conflict).
- */
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
@@ -15,15 +13,22 @@ export default function UploadPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
-      setMessage('Please choose a .md or .mdx file.'); setStatus('error'); return;
+      setMessage('Please choose a .md or .mdx file.');
+      setStatus('error'); 
+      return;
     }
     if (!/\.mdx?$/i.test(file.name)) {
-      setMessage('Only .md or .mdx files are accepted.'); setStatus('error'); return;
+      setMessage('Only .md or .mdx files are accepted.');
+      setStatus('error'); 
+      return;
     }
     if (file.size > 1024 * 1024) {
-      setMessage('File too large (max 1MB).'); setStatus('error'); return;
+      setMessage('File too large (max 1MB).');
+      setStatus('error'); 
+      return;
     }
-    setStatus('submitting'); setMessage('Uploading...');
+    setStatus('submitting'); 
+    setMessage('Uploading...');
 
     const text = await file.text();
     const payload = {
@@ -54,46 +59,49 @@ export default function UploadPage() {
   };
 
   return (
-    <div style={{maxWidth: 720, margin: 'var(--ifm-spacing-vertical) auto', padding: '0 1rem'}}>
-      <h1>Upload your Playbook (.md / .mdx)</h1>
-      <p>We will open a GitHub Pull Request with your file under <code>docs/playbooks/</code>.</p>
-      <form onSubmit={onSubmit} style={{display: 'grid', gap: 12}}>
-        <label>
-          <div>Markdown file</div>
-          <input
-            type="file"
-            accept=".md,.mdx,text/markdown"
-            onChange={e => setFile(e.target.files?.[0] ?? null)}
-            required
-          />
-        </label>
-        <label>
-          <div>Title (optional)</div>
-          <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Playbook title" />
-        </label>
-        <label>
-          <div>Author (optional)</div>
-          <input type="text" value={author} onChange={e => setAuthor(e.target.value)} placeholder="Your name or handle" />
-        </label>
-        <label>
-          <div>Note (optional)</div>
-          <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Any context you'd like to include" rows={4} />
-        </label>
-        <button
-          type="submit"
-          disabled={status==='submitting'}
-          style={{padding: '8px 14px'}}
-        >
-          {status==='submitting' ? 'Submitting…' : 'Upload & Open PR'}
-        </button>
-      </form>
-      {message && (
-        <p style={{marginTop: 12, whiteSpace: 'pre-wrap'}}>{message}</p>
-      )}
-      <hr style={{margin: '24px 0'}} />
-      <p style={{fontSize: 12, opacity: 0.8}}>
-        By uploading, you agree your content may be published under the repository license.
-      </p>
-    </div>
+    <Layout title="Upload Playbook">
+      <div style={{maxWidth: 720, margin: 'var(--ifm-spacing-vertical) auto', padding: '0 1rem'}}>
+        <h1>Upload your Playbook (.md / .mdx)</h1>
+        <p>We will open a GitHub Pull Request with your file under <code>docs/playbooks/</code>.</p>
+        <form onSubmit={onSubmit} style={{display: 'grid', gap: 12}}>
+          <label>
+            <div>Markdown file</div>
+            <input
+              type="file"
+              accept=".md,.mdx,text/markdown"
+              onChange={e => setFile(e.target.files?.[0] ?? null)}
+              required
+            />
+          </label>
+          <label>
+            <div>Title (optional)</div>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Playbook title" />
+          </label>
+          <label>
+            <div>Author (optional)</div>
+            <input type="text" value={author} onChange={e => setAuthor(e.target.value)} placeholder="Your name or handle" />
+          </label>
+          <label>
+            <div>Note (optional)</div>
+            <textarea value={note} onChange={e => setNote(e.target.value)} placeholder="Any context you'd like to include" rows={4} />
+          </label>
+          <button type="submit" disabled={status==='submitting'} className="button button--primary">
+            {status==='submitting' ? 'Submitting…' : 'Upload & Open PR'}
+          </button>
+        </form>
+        {message && (
+          <p style={{marginTop: 12, whiteSpace: 'pre-wrap'}}>{message}</p>
+        )}
+        <hr style={{margin: '24px 0'}} />
+        <p style={{fontSize: 12, opacity: 0.8}}>
+          By uploading, you agree your content may be published under the repository license.
+        </p>
+        <p style={{fontSize: 12, opacity: 0.8}}>
+          Trouble uploading? Check your project’s environment variables on Vercel:
+          <code> GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, BASE_BRANCH, PLAYBOOK_DIR</code>.
+        </p>
+        <p><Link to="/">← Back to home</Link></p>
+      </div>
+    </Layout>
   );
 }
