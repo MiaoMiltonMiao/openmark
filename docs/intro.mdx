@@ -1,55 +1,88 @@
 ---
-id: intro
-title: Welcome to OpenMark
-sidebar_label: Intro
-slug: /intro
 sidebar_position: 1
+title: 🚀 Intro
 ---
 
-# 📝 Welcome to **OpenMark**
+# Welcome to OpenMark
 
-OpenMark 是一個開放協作的 Markdown 知識庫。  
-目標：把我們在 ChatGPT 對話中的**精華內容**、**程式碼**、**逐步紀錄**，轉化成清晰的 Markdown 文件，並公開分享。  
-
-OpenMark is an open, collaborative Markdown knowledge base.  
-The goal is to turn our **key ChatGPT conversations**, **code snippets**, and **iteration logs** into clear Markdown documents for everyone to use and improve.
+OpenMark is a **collaborative Markdown knowledge base** powered by Docusaurus.  
+Everything starts with **ChatGPT conversations → Markdown Playbooks → Public docs**.
 
 ---
 
-## 🚀 快速開始 (Quick Start)
+## ⚡ Quick Start
 
-1. **建立新檔案 (Create a new file)**
-   - 進入 `/docs/`
-   - 複製 `_template.md`
-   - 重新命名 → 例如 (e.g.):  
+1. **Clone this repo**  
+   ```bash
+   git clone https://github.com/MiaoMiltonMiao/openmark.git
+   cd openmark
+   npm install
+   ```
+
+2. **Local preview**  
+   ```bash
+   npm run start
+   ```
+   → open [http://localhost:3000](http://localhost:3000)
+
+3. **Production build**
+   - For GitHub Pages:  
+     ```bash
+     npm run build:gh
      ```
-     2025-09-03-my-topic.md
+     Output uses `baseUrl=/openmark/`
+   - For Vercel:  
+     ```bash
+     npm run build:vercel
      ```
+     Output uses `baseUrl=/`
 
-2. **Frontmatter 規則 (Frontmatter rules)**  
-   在檔案最上方加上 YAML 區塊：  
-   Place a YAML block at the very top of your file:
+4. **Deploy**
+   - GitHub Pages → auto via Actions (`deploy-pages.yml`)  
+   - Vercel → auto from `main` branch  
 
-   ```md
-   ---
-   title: My Topic Title
-   slug: /2025-09-03-my-topic
-   sidebar_position: 2
-   tags: [openmark, guide]
-   ---
-3. ✨ 範例頁面 (Example Page)
-   想知道如何寫出一份完整的 Playbook？
-   👉 請參考這份文件：Wallet Pay Vibe Prompt Playbook
-   If you want to see a full working example, check out 👉 Wallet Pay Vibe Prompt Playbook
-   ---
-4. 📖 Why This Matters
-   透明 Transparent：完整紀錄 prompt 與過程 (Record prompts and process clearly)
-   可重現 Reproducible：任何人照著紀錄都能再現結果 (Anyone can reproduce the result)
-   可協作 Collaborative：大家能在同一套架構下貢獻與改進 (Shared structure makes collaboration easy)
-   ---
-5. 📝 撰寫規範 (Writing Guideline)
-   👉 請大家用這個方式撰寫自己的 .md 文件。
-   只要你有一段 Prompt → Iteration → Result 的過程，就值得放進 OpenMark！
-   👉 Please follow this style when writing your .md files.
-   If you have a Prompt → Iteration → Result workflow, it deserves a place in OpenMark!
-   ---
+---
+
+## 🛠️ Authoring Playbooks
+
+All Playbooks live in [playbooks](./playbooks/).  
+Each Playbook = one Markdown file, following the [Playbook Template](./template).
+
+### Example
+````md
+# Playbook title
+
+## 🎯 Goal
+Describe what this playbook solves.
+
+## 💡 Mega Prompt
+```text
+Paste the reusable ChatGPT mega prompt here.
+```
+
+## 🧩 Iteration Log
+- Try 1 → result
+- Try 2 → improved result
+
+## ✅ Final Code / Output
+Paste the working snippet / screenshot.
+````
+
+---
+
+## 🔄 Iteration & Prompts
+
+- **Mega Prompt on top** → always include the big “starter” instruction.  
+- **Log the tries** → short bullet notes of what worked / failed.  
+- **Final output** → the polished code / solution at bottom.  
+
+This way, anyone can **reproduce** your workflow, or fork and improve it.  
+
+---
+
+## 📬 Contributing
+
+- Fork → edit → Pull Request  
+- Or just share your `.md` Playbooks, we’ll help format them.  
+
+Together, we build an **open ChatGPT knowledge base** 🌐

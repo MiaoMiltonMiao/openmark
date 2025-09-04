@@ -3,8 +3,9 @@
     "start": "docusaurus start",
     "build": "docusaurus build",
     "serve": "docusaurus serve",
-    "build:gh": "docusaurus build",
-    "build:vercel": "cross-env BASE_URL=/ docusaurus build"
+    "build:gh": "cross-env BASE_URL=/openmark/ docusaurus build",
+    "build:vercel": "cross-env BASE_URL=/ docusaurus build",
+    "lint:docs": "node scripts/lint-doc-links.js"
   },
   "dependencies": {
     "@docusaurus/core": "^3.8.1",
@@ -14,6 +15,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "fast-glob": "^3.3.3"
   }
 }
