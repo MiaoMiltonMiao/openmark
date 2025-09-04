@@ -1,98 +1,97 @@
-// Vercel serverless function
-const { Octokit } = require('@octokit/rest')
-const Busboy = require('busboy')
+// Vercel Serverless Function: /api/upload
+// Commits a Markdown file to a new branch and opens a PR.
+const { Octokit } = require('@octokit/rest');
+const { customAlphabet } = require('nanoid');
+
+const nanoid = customAlphabet('abcdefghijkmnpqrstuvwxyz23456789', 8);
+
+function bad(res, code, msg) {
+  res.status(code).json({ error: msg });
+}
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' })
-    return
+    res.setHeader('Allow', 'POST');
+    return bad(res, 405, 'Method Not Allowed');
   }
-  const token = process.env.GITHUB_TOKEN
-  if (!token) {
-    res.status(500).json({ error: 'Missing GITHUB_TOKEN' })
-    return
-  }
-  const octokit = new Octokit({ auth: token })
 
   try {
-    const fields = {}
-    let fileBuf = null
-    let fileName = 'upload.md'
+    const { filename, content, title, author, note } = req.body || {};
+    if (!filename || !content) return bad(res, 400, 'filename and content are required');
+    if (!/\.mdx?$/i.test(filename)) return bad(res, 400, 'Only .md or .mdx allowed');
+    if (content.length > 1_000_000) return bad(res, 400, 'File too large (max 1MB)');
 
-    await new Promise((resolve, reject) => {
-      const bb = Busboy({ headers: req.headers })
-      bb.on('file', (_name, stream, info) => {
-        fileName = (info && info.filename) || fileName
-        const chunks = []
-        stream.on('data', d => chunks.push(d))
-        stream.on('end', () => { fileBuf = Buffer.concat(chunks) })
-      })
-      bb.on('field', (name, val) => { fields[name] = val })
-      bb.on('finish', resolve)
-      bb.on('error', reject)
-      req.pipe(bb)
-    })
+    const {
+      GITHUB_TOKEN,
+      GITHUB_OWNER,
+      GITHUB_REPO,
+      BASE_BRANCH = 'main',
+      PLAYBOOK_DIR = 'docs/playbooks'
+    } = process.env;
 
-    if (!fileBuf) {
-      res.status(400).json({ error: 'No file uploaded' })
-      return
+    if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO) {
+      return bad(res, 500, 'Server not configured: missing GITHUB_* env vars');
     }
 
-    const title = (fields.title || fileName.replace(/\.[^.]+$/, '').replace(/[_\s]+/g, '-')).slice(0, 80)
-    const tags = (fields.tags || '').split(',').map(s => s.trim()).filter(Boolean)
-    const summary = (fields.summary || '').slice(0, 300)
+    const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
-    // Ensure Markdown has frontmatter
-    let content = fileBuf.toString('utf8')
-    if (!content.startsWith('---')) {
-      const now = new Date().toISOString().slice(0,10)
-      const fm = [
-        '---',
-        `title: "${title.replace(/"/g,'\\"')}"`,
-        `date: "${now}"`,
-        `tags: [${tags.map(t=>`"${t.replace(/"/g,'\\"')}"`).join(', ')}]`,
-        'license: "CC BY 4.0"',
-        `summary: "${summary.replace(/"/g,'\\"')}"`,
-        '---',
-        '',
-      ].join('\n')
-      content = fm + content
-    }
+    // 1) Get base branch SHA
+    const { data: baseRef } = await octokit.git.getRef({
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+      ref: `heads/${BASE_BRANCH}`,
+    });
+    const baseSha = baseRef.object.sha;
 
-    const owner = process.env.OWNER || 'MiaoMiltonMiao'
-    const repo = process.env.REPO || 'openmark'
+    // 2) Create new branch
+    const slugTitle = String(title || filename.replace(/\.(md|mdx)$/i, '')).toLowerCase()
+      .replace(/[^a-z0-9\-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    const branchName = `upload/${slugTitle || 'playbook'}-${nanoid()}`;
 
-    // Get default branch (main)
-    const { data: repoData } = await octokit.repos.get({ owner, repo })
-    const baseBranch = repoData.default_branch || 'main'
+    await octokit.git.createRef({
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+      ref: `refs/heads/${branchName}`,
+      sha: baseSha,
+    });
 
-    // Create a new branch off main
-    const { data: baseRef } = await octokit.git.getRef({ owner, repo, ref: `heads/${baseBranch}` })
-    const baseSha = baseRef.object.sha
-    const featureBranch = `upload/${Date.now()}-${title.toLowerCase().replace(/[^a-z0-9-]/g,'')}`.slice(0, 120)
-    await octokit.git.createRef({ owner, repo, ref: `refs/heads/${featureBranch}`, sha: baseSha })
+    // 3) Create file
+    const path = `${PLAYBOOK_DIR}/${slugTitle || 'playbook'}.md`;
+    const message = `docs(playbook): add ${slugTitle || filename} via upload`;
+    const contentB64 = Buffer.from(content, 'utf8').toString('base64');
 
-    // Put file into docs/
-    const path = `docs/${title.toLowerCase().replace(/[^a-z0-9-]/g,'-') || 'upload'}.md`
     await octokit.repos.createOrUpdateFileContents({
-      owner, repo, path,
-      message: `chore: add uploaded doc ${title}`,
-      content: Buffer.from(content, 'utf8').toString('base64'),
-      branch: featureBranch,
-    })
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+      path,
+      message,
+      content: contentB64,
+      branch: branchName,
+    });
 
-    // Open PR
-    const pr = await octokit.pulls.create({
-      owner, repo,
-      head: featureBranch,
-      base: baseBranch,
-      title: `Upload: ${title}`,
-      body: `Auto-uploaded via web form.\n\nTags: ${tags.join(', ')}`,
-    })
+    // 4) Open PR
+    const prTitle = `Add playbook: ${title || filename}`;
+    const prBody = [
+      `**Author**: ${author || 'anonymous'}`,
+      note ? `**Note**: ${note}` : null,
+      '',
+      `File: \`${path}\``,
+    ].filter(Boolean).join('\n');
 
-    res.status(200).json({ prUrl: pr.data.html_url })
+    const { data: pr } = await octokit.pulls.create({
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+      head: branchName,
+      base: BASE_BRANCH,
+      title: prTitle,
+      body: prBody,
+      maintainer_can_modify: true,
+    });
+
+    return res.status(200).json({ ok: true, prUrl: pr.html_url });
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: err && err.message ? err.message : 'Upload failed' })
+    console.error(err);
+    return bad(res, 500, err?.message || 'Unexpected error');
   }
-}
+};
