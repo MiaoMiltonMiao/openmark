@@ -1,6 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
+
+type DebugInfo = {
+  step?: string;
+  doc?: string;
+  debug?: {
+    owner: string;
+    repo: string;
+    baseBranchName: string;
+    playbookDir: string;
+    path: string;
+    branchName: string;
+    ref: string;
+  }
+};
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -9,6 +23,15 @@ export default function UploadPage() {
   const [note, setNote] = useState('');
   const [status, setStatus] = useState<'idle'|'submitting'|'ok'|'error'>('idle');
   const [message, setMessage] = useState<string>('');
+  const [diag, setDiag] = useState<any>(null);
+
+  useEffect(() => {
+    // fetch healthcheck to show normalized config
+    fetch('/api/upload')
+      .then(r => r.json())
+      .then(setDiag)
+      .catch(() => {});
+  }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,12 +70,14 @@ export default function UploadPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data?.error || 'Upload failed');
+        const dbg: DebugInfo = data;
+        const extra = dbg?.step ? ` (step: ${dbg.step})` : '';
+        const detail = dbg?.debug ? `\n\nDebug:\n${JSON.stringify(dbg.debug, null, 2)}` : '';
+        throw new Error((data?.error || 'Upload failed') + extra + detail);
       }
       setStatus('ok');
       setMessage(`✅ PR created: ${data.prUrl}`);
     } catch (err: any) {
-      console.error(err);
       setStatus('error');
       setMessage(err.message || 'Upload failed');
     }
@@ -63,6 +88,13 @@ export default function UploadPage() {
       <div style={{maxWidth: 720, margin: 'var(--ifm-spacing-vertical) auto', padding: '0 1rem'}}>
         <h1>Upload your Playbook (.md / .mdx)</h1>
         <p>We will open a GitHub Pull Request with your file under <code>docs/playbooks/</code>.</p>
+
+        {diag?.ok && (
+          <div style={{background: 'var(--ifm-color-emphasis-200)', padding: 12, borderRadius: 6, marginBottom: 16, fontSize: 14}}>
+            <b>Server OK</b> — normalized config: <code>{JSON.stringify(diag.normalized)}</code>
+          </div>
+        )}
+
         <form onSubmit={onSubmit} style={{display: 'grid', gap: 12}}>
           <label>
             <div>Markdown file</div>
@@ -90,15 +122,11 @@ export default function UploadPage() {
           </button>
         </form>
         {message && (
-          <p style={{marginTop: 12, whiteSpace: 'pre-wrap'}}>{message}</p>
+          <pre style={{marginTop: 12, whiteSpace: 'pre-wrap', background: '#00000010', padding: 12, borderRadius: 6}}>{message}</pre>
         )}
         <hr style={{margin: '24px 0'}} />
         <p style={{fontSize: 12, opacity: 0.8}}>
           By uploading, you agree your content may be published under the repository license.
-        </p>
-        <p style={{fontSize: 12, opacity: 0.8}}>
-          Trouble uploading? Check your project’s environment variables on Vercel:
-          <code> GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, BASE_BRANCH, PLAYBOOK_DIR</code>.
         </p>
         <p><Link to="/">← Back to home</Link></p>
       </div>
